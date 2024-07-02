@@ -19,9 +19,8 @@ filestoragedb = filemanagement.filemanagement();
 def get_filelist(user_uuid, chatroom_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_id=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_id=user_uuid, chatroom_id=chatroom_uuid);
-
+    auth_user(user_uuid=user_uuid, cookie=cookie)
+    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
     #obtain the list of files in the specified chatroom as well as the file uuids
     filelist = filestoragedb.getFilesFromChatroom(chatroom_uuid=chatroom_uuid);
     return filelist;
@@ -30,8 +29,8 @@ def get_filelist(user_uuid, chatroom_uuid, cookie):
 def get_file(user_uuid, chatroom_uuid, file_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_id=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_id=user_uuid, chatroom_id=chatroom_uuid);
+    auth_user(user_uuid=user_uuid, cookie=cookie)
+    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
 
     #verify if file exists for chatroom_uuid
     if filestoragedb.isValidFile(chatroom_uuid, file_uuid):
@@ -42,9 +41,8 @@ def get_file(user_uuid, chatroom_uuid, file_uuid, cookie):
 async def post_file(user_uuid, chatroom_uuid, uploadedfile: UploadFile, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_id=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_id=user_uuid, chatroom_id=chatroom_uuid);
-
+    auth_user(user_uuid=user_uuid, cookie=cookie)
+    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
     if uploadedfile.size > 10*1024*1024:
         raise HTTPException(status_code=403, detail="File too large")
     #upload the file from the user into the chatroom
@@ -64,9 +62,8 @@ async def post_file(user_uuid, chatroom_uuid, uploadedfile: UploadFile, cookie):
 def delete_file(user_uuid, chatroom_uuid, file_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_id=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_id=user_uuid, chatroom_id=chatroom_uuid);
-
+    auth_user(user_uuid=user_uuid, cookie=cookie)
+    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
     #check to make sure the file the user is trying to delete is valid
     if filestoragedb.isValidFile(chatroom_uuid, file_uuid):
         filestoragedb.deleteFile(file_uuid);
