@@ -11,7 +11,7 @@ class filemanagement:
                                 UPLOADUSER CHAR(37) NOT NULL)")
         
     def getFilesFromChatroom(self, chatroom_uuid):
-        self.cursor.execute("SELECT FILEUUID, FILENAME FROM filelists WHERE CHATROOM = ?;", (chatroom_uuid));
+        self.cursor.execute("SELECT FILEUUID, FILENAME FROM filelists WHERE CHATROOM = ?;", (str(chatroom_uuid),));
         return self.cursor.fetchall();
 
     def createFile(self, user_id, chatroom_uuid, file_uuid, file_name):
