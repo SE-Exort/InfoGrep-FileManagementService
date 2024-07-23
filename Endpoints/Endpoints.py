@@ -1,4 +1,3 @@
-import json;
 import uuid;
 import os;
 
@@ -8,8 +7,6 @@ from fastapi.responses import FileResponse
 
 from InfoGrep_BackendSDK import authentication_sdk, parse_api, room_sdk
 import filemanagement;
-
-import requests
 
 router = APIRouter(prefix='/api', tags=["api"]);
 filestoragedb = filemanagement.filemanagement();
@@ -24,7 +21,10 @@ def get_filelist(chatroom_uuid, cookie):
 
     #obtain the list of files in the specified chatroom as well as the file uuids
     filelist = filestoragedb.getFilesFromChatroom(chatroom_uuid=chatroom_uuid);
-    return filelist;
+    filelistjson = {'list': []}
+    for item in filelist:
+        filelistjson['list'].append({'File_UUID': item[0], 'File_Name': item[1]})
+    return filelistjson;
 
 @router.get('/file')
 def get_file(chatroom_uuid, file_uuid, cookie):
@@ -71,8 +71,8 @@ def delete_file(chatroom_uuid, file_uuid, cookie):
     room_sdk.get_userInRoom(chatroom_uuid=chatroom_uuid, cookie=cookie);
 
     #check to make sure the file the user is trying to delete is valid
-    if filestoragedb.isValidFile(chatroom_uuid, file_uuid):
-        filestoragedb.deleteFile(file_uuid);
+    if filestoragedb.isValidFile(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid):
+        filestoragedb.deleteFile(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid);
         os.remove('files/' + file_uuid);
     else:
         raise HTTPException(status_code=403, detail="File does not exist or does not belong to the user")
