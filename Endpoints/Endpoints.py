@@ -2,12 +2,11 @@ import json;
 import uuid;
 import os;
 
-from fastapi import FastAPI, APIRouter;
+from fastapi import APIRouter, HTTPException;
 from fastapi import UploadFile;
 from fastapi.responses import FileResponse
 
-from authenticate import *;
-from InfoGrep_BackendSDK import parse_api
+from InfoGrep_BackendSDK import authentication_sdk, parse_api, room_sdk
 import filemanagement;
 
 import requests
@@ -16,21 +15,24 @@ router = APIRouter(prefix='/api', tags=["api"]);
 filestoragedb = filemanagement.filemanagement();
 
 @router.get('/filelist')
-def get_filelist(user_uuid, chatroom_uuid, cookie):
+def get_filelist(chatroom_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_uuid=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
+    user = authentication_sdk.User(cookie)
+    user_uuid = user.profile()['user_uuid'];
+    room_sdk.get_userInRoom(chatroom_uuid=chatroom_uuid, cookie=cookie);
+
     #obtain the list of files in the specified chatroom as well as the file uuids
     filelist = filestoragedb.getFilesFromChatroom(chatroom_uuid=chatroom_uuid);
     return filelist;
 
 @router.get('/file')
-def get_file(user_uuid, chatroom_uuid, file_uuid, cookie):
+def get_file(chatroom_uuid, file_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_uuid=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
+    user = authentication_sdk.User(cookie)
+    user_uuid = user.profile()['user_uuid'];
+    room_sdk.get_userInRoom(chatroom_uuid=chatroom_uuid, cookie=cookie);
 
     #verify if file exists for chatroom_uuid
     if filestoragedb.isValidFile(chatroom_uuid, file_uuid):
@@ -38,11 +40,13 @@ def get_file(user_uuid, chatroom_uuid, file_uuid, cookie):
     raise HTTPException(status_code=403, detail="Requested file not found");
 
 @router.post('/file')
-async def post_file(user_uuid, chatroom_uuid, uploadedfile: UploadFile, cookie):
+async def post_file(chatroom_uuid, uploadedfile: UploadFile, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_uuid=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
+    user = authentication_sdk.User(cookie)
+    user_uuid = user.profile()['user_uuid'];
+    room_sdk.get_userInRoom(chatroom_uuid=chatroom_uuid, cookie=cookie);
+
     if uploadedfile.size > 10*1024*1024:
         raise HTTPException(status_code=403, detail="File too large")
     #upload the file from the user into the chatroom
@@ -59,11 +63,13 @@ async def post_file(user_uuid, chatroom_uuid, uploadedfile: UploadFile, cookie):
     return file_uuid;
 
 @router.delete('/file')
-def delete_file(user_uuid, chatroom_uuid, file_uuid, cookie):
+def delete_file(chatroom_uuid, file_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
-    auth_user(user_uuid=user_uuid, cookie=cookie)
-    auth_user_chatroom(user_uuid=user_uuid, chatroom_id=chatroom_uuid);
+    user = authentication_sdk.User(cookie)
+    user_uuid = user.profile()['user_uuid'];
+    room_sdk.get_userInRoom(chatroom_uuid=chatroom_uuid, cookie=cookie);
+
     #check to make sure the file the user is trying to delete is valid
     if filestoragedb.isValidFile(chatroom_uuid, file_uuid):
         filestoragedb.deleteFile(file_uuid);
