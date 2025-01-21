@@ -59,7 +59,7 @@ async def post_file(request: Request, chatroom_uuid, uploadedfile: UploadFile, c
     
     filestoragedb.createFile(user_uuid, chatroom_uuid, file_uuid, uploadedfile.filename);
 
-    parse_api.parse_postStartParsing(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid, filetype="PDF", cookie=cookie);
+    parse_api.parse_postStartParsing(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid, filetype="PDF", cookie=cookie, headers=request.headers);
     return file_uuid;
 
 @router.delete('/file')
