@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi import UploadFile;
 from fastapi.responses import FileResponse
 
-from InfoGrep_BackendSDK import authentication_sdk, parse_api, room_sdk
+from InfoGrep_BackendSDK import authentication_sdk, room_sdk
 import filemanagement;
 
 router = APIRouter(prefix='/api', tags=["api"]);
@@ -59,7 +59,6 @@ async def post_file(request: Request, chatroom_uuid, uploadedfile: UploadFile, c
     
     filestoragedb.createFile(user_uuid, chatroom_uuid, file_uuid, uploadedfile.filename);
 
-    parse_api.parse_postStartParsing(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid, filetype="PDF", cookie=cookie, headers=request.headers);
     return file_uuid;
 
 @router.delete('/file')
