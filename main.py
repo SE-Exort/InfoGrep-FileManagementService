@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 import os
 
 from Endpoints.Endpoints import router
+from InfoGrep_BackendSDK.middleware import TracingMiddleware, LoggingMiddleware
+from InfoGrep_BackendSDK.infogrep_logger.logger import Logger
 
 InfoGrepFileManagementService = FastAPI();
 
@@ -14,14 +16,8 @@ origins = [
     "*",
 ]
 
-@InfoGrepFileManagementService.middleware("http")
-async def add_open_telemetry_headers(request: Request, call_next):
-    response = await call_next(request)
-    for k, v in request.headers.items():
-        if k.startswith("x-") or k.startswith("trace"):
-            response.headers[k] = v
-    return response
-
+InfoGrepFileManagementService.add_middleware(LoggingMiddleware, logger=Logger("FileManagementServiceLogger"))
+InfoGrepFileManagementService.add_middleware(TracingMiddleware)
 InfoGrepFileManagementService.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
