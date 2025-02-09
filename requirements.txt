@@ -2,3 +2,4 @@ python-multipart
 uvicorn
 fastapi
 requests
+psycopg2-binary
