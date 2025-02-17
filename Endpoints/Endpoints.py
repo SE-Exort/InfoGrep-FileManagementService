@@ -1,5 +1,4 @@
 import uuid;
-import os;
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi import UploadFile;
@@ -7,6 +6,12 @@ from fastapi.responses import FileResponse
 
 from InfoGrep_BackendSDK import authentication_sdk, room_sdk, ai_sdk
 import filemanagement;
+
+from Backends.backend import Backend
+from Backends.filesystem import FileSystem
+
+filebackend : Backend;
+filebackend = FileSystem("files/");
 
 router = APIRouter(prefix='/api', tags=["api"]);
 filestoragedb = filemanagement.filemanagement();
@@ -36,7 +41,7 @@ def get_file(request: Request, chatroom_uuid, file_uuid, cookie):
 
     #verify if file exists for chatroom_uuid
     if filestoragedb.isValidFile(chatroom_uuid, file_uuid):
-        return FileResponse(path='files/' + file_uuid, filename=filestoragedb.getFileName(chatroom_uuid, file_uuid));
+        return filebackend.get_file(file_uuid=file_uuid, file_name=filestoragedb.getFileName(chatroom_uuid, file_uuid));
     raise HTTPException(status_code=403, detail="Requested file not found");
 
 @router.post('/file')
@@ -52,11 +57,9 @@ async def post_file(request: Request, chatroom_uuid, uploadedfile: UploadFile, c
     #upload the file from the user into the chatroom
     file_uuid = uuid.uuid4();
 
-    with open('files/' + str(file_uuid), "wb") as file:
-        content = await uploadedfile.read()  # async read chunk
-        file.write(content)  # async write chunk
+    await filebackend.save_file(str(file_uuid), uploadedfile=uploadedfile)
     
-    ai_sdk.parse_postStartParsing(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid, filetype="PDF", cookie=cookie, headers=request.headers);
+    #ai_sdk.parse_postStartParsing(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid, filetype="PDF", cookie=cookie, headers=request.headers);
     
     filestoragedb.createFile(user_uuid, chatroom_uuid, file_uuid, uploadedfile.filename);
 
@@ -73,7 +76,7 @@ def delete_file(request: Request, chatroom_uuid, file_uuid, cookie):
     #check to make sure the file the user is trying to delete is valid
     if filestoragedb.isValidFile(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid):
         filestoragedb.deleteFile(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid);
-        os.remove('files/' + file_uuid);
+        filebackend.delete_file(file_uuid=file_uuid);
     else:
         raise HTTPException(status_code=403, detail="File does not exist or does not belong to the user")
     return;
