@@ -4,6 +4,9 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi import UploadFile;
 from fastapi.responses import FileResponse
 
+from InfoGrep_BackendSDK.infogrep_logger.logger import Logger
+log = Logger("FileManagementServiceLogger")
+
 from InfoGrep_BackendSDK import authentication_sdk, room_sdk, ai_sdk
 import filemanagement;
 
@@ -80,4 +83,45 @@ def delete_file(request: Request, chatroom_uuid, file_uuid, cookie):
     else:
         raise HTTPException(status_code=403, detail="File does not exist or does not belong to the user")
     return;
+
+@router.get('/admin-all-files')
+def admin_get_all_files(request: Request, cookie):
+    #authenticate user and chatroom
+    #user must have a valid session cookie
+    log.info("Endpoint: '/admin-all-files', cookie: {}, Message: Got a request to get all files", cookie)
+    user = authentication_sdk.User(cookie, headers=request.headers)
+    log.info("Endpoint: '/admin-all-files', cookie: {}, Message: User exists", cookie)
+    if not user.profile()['is_admin']:
+        log.error("Endpoint: '/admin-all-files', cookie: {}, user_uuid: {}, Message: User exists but is not admin", cookie, user.profile['user_uuid'])
+        raise HTTPException(status_code=401, detail="User is not an admin")
+    log.info("Endpoint: '/admin-all-files', cookie: {}, user_uuid: {}, Message: User exists and is admin", cookie, user.profile['user_uuid'])
+
+    filelist = filestoragedb.getFilesFromChatroom(chatroom_uuid='*');
+    filelistjson = {'list': []}
+    for item in filelist:
+        filelistjson['list'].append({'File_UUID': item[0], 'File_Name': item[1]})
+    log.info("Endpoint: '/admin-all-files', cookie: {}, Message: Successfully returning all files in Service", cookie)
+    return filelistjson;
+
+@router.get('/admin-delete-file')
+def admin_delete_file(request: Request, file_uuid, cookie):
+    #authenticate user and chatroom
+    #user must have a valid session cookie
+    log.info("Endpoint: '/admin-delete-file', cookie: {}, Message: Got Admin request to delete file", cookie)
+    user = authentication_sdk.User(cookie, headers=request.headers)
+    log.info("Endpoint: '/admin-delete-file', cookie: {}, Message: User exists", cookie)
+    if not user.profile()['is_admin']:
+        log.error("Endpoint: '/admin-delete-file', cookie: {}, user_uuid: {}, Message: User exists but is not admin", cookie, user.profile['user_uuid'])
+        raise HTTPException(status_code=401, detail="User is not an admin")
+    log.info("Endpoint: '/admin-delete-file', cookie: {}, user_uuid: {}, Message: User exists and is admin", cookie, user.profile['user_uuid'])
+
+    #check to make sure the file the user is trying to delete is valid
+    if filestoragedb.isValidFile(chatroom_uuid='*', file_uuid=file_uuid):
+        log.info("Endpoint: '/admin-delete-file', cookie: {}, Message: File Exists", cookie)
+        filestoragedb.deleteFile(chatroom_uuid='*', file_uuid=file_uuid);
+        filebackend.delete_file(file_uuid=file_uuid);
+        log.info("Endpoint: '/admin-delete-file', cookie: {}, Message: Successfully deleted file from Service", cookie)
+    else:
+        log.error("Endpoint: '/admin-delete-file', cookie: {}, Message: File Does not exist", cookie)
+        raise HTTPException(status_code=403, detail="File does not exist or does not belong to the user")
 
