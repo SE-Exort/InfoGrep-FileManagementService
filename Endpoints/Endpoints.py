@@ -103,7 +103,7 @@ def admin_get_all_files(request: Request, cookie):
     log.info("Endpoint: '/admin-all-files', cookie: {}, Message: Successfully returning all files in Service", cookie)
     return filelistjson;
 
-@router.get('/admin-delete-file')
+@router.delete('/admin-delete-file')
 def admin_delete_file(request: Request, file_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
