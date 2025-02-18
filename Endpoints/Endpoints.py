@@ -65,7 +65,7 @@ async def post_file(request: Request, chatroom_uuid, uploadedfile: UploadFile, c
     
     #ai_sdk.parse_postStartParsing(chatroom_uuid=chatroom_uuid, file_uuid=file_uuid, filetype="PDF", cookie=cookie, headers=request.headers);
     
-    filestoragedb.createFile(user_uuid, chatroom_uuid, file_uuid, uploadedfile.filename);
+    filestoragedb.createFile(user_uuid, chatroom_uuid, file_uuid, uploadedfile.filename, uploadedfile.size);
 
     return file_uuid;
 
@@ -91,21 +91,21 @@ def admin_get_all_files(request: Request, cookie):
     #user must have a valid session cookie
     log_info = LoggerStruct(Endpoint='/admin-all-files', Cookie=cookie)
 
-    log.info(msg="Message: Got Admin request to get all files", extra=log_info)
+    log.info(msg="Message: Got Admin request to get all files", extra=log_info.model_dump())
     user = authentication_sdk.User(cookie, headers=request.headers)
     log_info.User_UUID = user.profile()['user_uuid']
 
-    log.info(msg="Message: User exists", extra=log_info)
+    log.info(msg="Message: User exists", extra=log_info.model_dump())
     if not user.profile()['is_admin']:
-        log.error(msg="User exists but is not admin", extra=log_info)
+        log.error(msg="User exists but is not admin", extra=log_info.model_dump())
         raise HTTPException(status_code=401, detail="User is not an admin")
-    log.info(msg="User exists and is admin", extra=log_info)
+    log.info(msg="User exists and is admin", extra=log_info.model_dump())
 
-    filelist = filestoragedb.getFilesFromChatroom(chatroom_uuid='*');
+    filelist = filestoragedb.adminGetAllFiles();
     filelistjson = {'list': []}
     for item in filelist:
-        filelistjson['list'].append({'File_UUID': item[0], 'File_Name': item[1]})
-    log.info(msg="Successfully returning all files in Service", extra=log_info)
+        filelistjson['list'].append({'File_UUID': item[0], 'Chatroom_UUID': item[1], 'Uploader_UUID': item[2], 'File_Name': item[3], 'File_Size': item[4]})
+    log.info(msg="Successfully returning all files in Service", extra=log_info.model_dump())
     return filelistjson;
 
 @router.delete('/admin-delete-file')
@@ -114,24 +114,24 @@ def admin_delete_file(request: Request, file_uuid, cookie):
     #user must have a valid session cookie
     log_info = LoggerStruct(Endpoint='/admin-delete-file', Cookie=cookie, File_UUID=str(file_uuid))
 
-    log.info(msg="Got Admin request to delete file", extra=log_info);
+    log.info(msg="Got Admin request to delete file", extra=log_info.model_dump());
 
     user = authentication_sdk.User(cookie, headers=request.headers)
     log_info.User_UUID = user.profile()['user_uuid']
 
-    log.info(msg="User exists", extra=log_info)
+    log.info(msg="User exists", extra=log_info.model_dump())
     if not user.profile()['is_admin']:
-        log.error(msg="User exists but is not admin", extra=log_info)
+        log.error(msg="User exists but is not admin", extra=log_info.model_dump())
         raise HTTPException(status_code=401, detail="User is not an admin")
-    log.info(msg="User exists and is admin", extra=log_info);
+    log.info(msg="User exists and is admin", extra=log_info.model_dump());
 
     #check to make sure the file the user is trying to delete is valid
-    if filestoragedb.isValidFile(chatroom_uuid='*', file_uuid=file_uuid):
-        log.info(msg="File Exists", extra=log_info);
-        filestoragedb.deleteFile(chatroom_uuid='*', file_uuid=file_uuid);
+    if filestoragedb.adminIsValidFile(file_uuid=file_uuid):
+        log.info(msg="File Exists", extra=log_info.model_dump());
+        filestoragedb.adminDeleteFile(file_uuid=file_uuid);
         filebackend.delete_file(file_uuid=file_uuid);
-        log.info(msg="Successfully deleted file from Service", extra=log_info);
+        log.info(msg="Successfully deleted file from Service", extra=log_info.model_dump());
     else:
-        log.error(msg="File Does not exist", extra=log_info);
+        log.error(msg="File Does not exist", extra=log_info.model_dump());
         raise HTTPException(status_code=403, detail="File does not exist or does not belong to the user")
 
