@@ -109,7 +109,7 @@ def admin_get_all_files(request: Request, cookie):
     return filelistjson;
 
 @router.delete('/admin-delete-file')
-def admin_delete_file(request: Request, file_uuid: uuid, cookie):
+def admin_delete_file(request: Request, file_uuid, cookie):
     #authenticate user and chatroom
     #user must have a valid session cookie
     log_info = LoggerStruct(Endpoint='/admin-delete-file', Cookie=cookie, File_UUID=str(file_uuid))
