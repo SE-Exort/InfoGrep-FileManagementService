@@ -13,20 +13,19 @@ services:
     depends_on:
       file-management-service-postgres:
         condition: service_healthy
-    links:
-      - file-management-service-postgres
-  file-management-service-postgres:
-    container_name: file-management-service-postgres
-    image: postgres
-    restart: always
-    # set shared memory limit when using docker-compose
-    shm_size: 128mb
-    expose:
-      - '5432'
-    environment:
-      POSTGRES_PASSWORD: example
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    network_mode: "host"
+  # file-management-service-postgres:
+  #   container_name: file-management-service-postgres
+  #   image: postgres
+  #   restart: always
+  #   # set shared memory limit when using docker-compose
+  #   shm_size: 128mb
+  #   expose:
+  #     - '5432'
+  #   environment:
+  #     POSTGRES_PASSWORD: example
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
