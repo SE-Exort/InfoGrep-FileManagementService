@@ -10,9 +10,6 @@ services:
       - '8002'
     ports:
       - '8002:8002'
-    depends_on:
-      file-management-service-postgres:
-        condition: service_healthy
     network_mode: "host"
   # file-management-service-postgres:
   #   container_name: file-management-service-postgres
