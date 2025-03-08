@@ -35,6 +35,7 @@ def get_filelist(request: Request, chatroom_uuid, cookie):
         filelistjson['list'].append({'File_UUID': item[0], 'File_Name': item[1]})
     return filelistjson;
 
+@router.head('/file')
 @router.get('/file')
 def get_file(request: Request, chatroom_uuid, file_uuid, cookie):
     #authenticate user and chatroom
