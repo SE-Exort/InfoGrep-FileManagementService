@@ -3,6 +3,7 @@ import uuid;
 from fastapi import APIRouter, HTTPException, Request
 from fastapi import UploadFile;
 from fastapi.responses import FileResponse
+from fastapi.openapi.docs import get_swagger_ui_html
 
 from InfoGrep_BackendSDK.infogrep_logger.logger import Logger
 from InfoGrep_BackendSDK.infogrep_struct.logger_struct import LoggerStruct
@@ -136,3 +137,9 @@ def admin_delete_file(request: Request, file_uuid, cookie):
         log.error(msg="File Does not exist", extra=log_info.model_dump());
         raise HTTPException(status_code=403, detail="File does not exist or does not belong to the user")
 
+@router.get("/docs")
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url="/fms/openapi.json",
+        title="File Management API Doc"
+    )
