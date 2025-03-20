@@ -39,7 +39,7 @@ class filemanagement:
         else:
             self.con = psycopg2.connect(database=db_name, user=db_user, password=db_password, host=db_host, port=db_port, **keepalive_kwargs)
             self.logger.info("DB connection established")
-        
+        self.con.autocommit = False;
         self.cursor = self.con.cursor()
         self.cursor.execute("CREATE TABLE IF NOT EXISTS filelists (\
                                 FILEUUID CHAR(36) PRIMARY KEY,\
@@ -47,6 +47,11 @@ class filemanagement:
                                 FILENAME VARCHAR NOT NULL,\
                                 UPLOADUSER CHAR(36) NOT NULL,\
                                 FILESIZE BIGINT NOT NULL)")
+        
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS filebackend (\
+                            FILEUUID CHAR(36) PRIMARY KEY,\
+                            FILEOID INT NOT NULL\
+                            )")
         
     def getFilesFromChatroom(self, chatroom_uuid):
         self.cursor.execute("SELECT FILEUUID, FILENAME FROM filelists WHERE CHATROOM = %s", (str(chatroom_uuid),))
@@ -86,3 +91,28 @@ class filemanagement:
         if not fileexists:
             return 0
         return 1
+
+    def backendSaveFile(self, file_uuid, file):
+        write_object = self.con.lobject(0, 'w');
+        write_object.write(file)
+        self.con.commit()
+        self.cursor.execute("INSERT INTO filebackend(FILEUUID,FILEOID) VALUES(%s,%s)", (str(file_uuid),str(write_object.oid),))
+        self.con.commit()
+        return
+    
+    def backendReadFile(self, file_uuid):
+        self.cursor.execute("SELECT FILEOID FROM filebackend WHERE FILEUUID = %s", (str(file_uuid),));
+        file_oid = self.cursor.fetchone()[0]
+        return self.con.lobject(file_oid, 'b');
+
+    def backendDeleteFile(self, file_uuid):
+        #delete the actual file
+        self.cursor.execute("SELECT FILEOID FROM filebackend WHERE FILEUUID = %s", (str(file_uuid),));
+        file_oid = self.cursor.fetchone()[0]
+        file = self.con.lobject(file_oid, 'r');
+        file.unlink();
+        self.con.commit();
+
+        #delete the reference to the file
+        self.cursor.execute("DELETE FROM filebackend WHERE FILEUUID = %s", (str(file_uuid), ));
+        self.con.commit()

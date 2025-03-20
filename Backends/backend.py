@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from fastapi import UploadFile
 
 class Backend(ABC):
-    def __init__(self, location):
-        self.location = location;
+    def __init__(self, param):
         return;
 
     @abstractmethod

@@ -14,12 +14,15 @@ import filemanagement;
 
 from Backends.backend import Backend
 from Backends.filesystem import FileSystem
+from Backends.postgres import Postgres
+
+filestoragedb = filemanagement.filemanagement();
 
 filebackend : Backend;
-filebackend = FileSystem("files/");
+#filebackend = FileSystem("files/");
+filebackend = Postgres(filestoragedb);
 
 router = APIRouter(prefix='/api', tags=["api"]);
-filestoragedb = filemanagement.filemanagement();
 
 @router.get('/filelist')
 def get_filelist(request: Request, chatroom_uuid, cookie):
