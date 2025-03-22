@@ -58,22 +58,26 @@ class filemanagement:
         cursor = self.con.cursor();
         cursor.execute("SELECT FILEUUID, FILENAME FROM filelists WHERE CHATROOM = %s", (str(chatroom_uuid),))
         result = cursor.fetchall();
+        cursor.close();
         return result;
 
     def createFile(self, user_id, chatroom_uuid, file_uuid, file_name, file_size):
         cursor = self.con.cursor();
         cursor.execute("INSERT INTO filelists(FILEUUID,CHATROOM,FILENAME,UPLOADUSER,FILESIZE) VALUES(%s,%s,%s,%s,%s)", (str(file_uuid),str(chatroom_uuid),str(file_name),str(user_id),file_size))
         self.con.commit()
+        cursor.close();
     
     def deleteFile(self, chatroom_uuid, file_uuid):
         cursor = self.con.cursor();
         cursor.execute("DELETE FROM filelists WHERE CHATROOM = %s AND FILEUUID = %s", (str(chatroom_uuid), str(file_uuid)))
         self.con.commit()
+        cursor.close();
 
     def isValidFile(self, chatroom_uuid, file_uuid):
         cursor = self.con.cursor();
         cursor.execute("SELECT * FROM filelists WHERE CHATROOM = %s AND FILEUUID = %s", (str(chatroom_uuid), str(file_uuid)))
         fileexists = cursor.fetchall()
+        cursor.close();
         if not fileexists:
             return 0
         return 1
@@ -82,22 +86,27 @@ class filemanagement:
         cursor = self.con.cursor();
         cursor.execute("SELECT FILENAME FROM filelists WHERE CHATROOM = %s AND FILEUUID = %s", (str(chatroom_uuid), str(file_uuid)))
         matchingfiles = cursor.fetchone()
+        cursor.close();
         return matchingfiles[0]
 
     def adminGetAllFiles(self):
         cursor = self.con.cursor();
         cursor.execute("SELECT FILEUUID, CHATROOM, UPLOADUSER, FILENAME, FILESIZE FROM filelists")
-        return cursor.fetchall()
+        result =  cursor.fetchall()
+        cursor.close();
+        return result;
 
     def adminDeleteFile(self, file_uuid):
         cursor = self.con.cursor();
         cursor.execute("DELETE FROM filelists WHERE FILEUUID = %s", (str(file_uuid),))
         self.con.commit()
+        cursor.close();
 
     def adminIsValidFile(self, file_uuid):
         cursor = self.con.cursor();
         cursor.execute("SELECT * FROM filelists WHERE FILEUUID = %s", (str(file_uuid),))
         fileexists = cursor.fetchall()
+        cursor.close();
         if not fileexists:
             return 0
         return 1
@@ -109,13 +118,16 @@ class filemanagement:
         cursor = self.con.cursor();
         cursor.execute("INSERT INTO filebackend(FILEUUID,FILEOID) VALUES(%s,%s)", (str(file_uuid),str(write_object.oid),))
         self.con.commit()
+        cursor.close();
         return
     
     def backendReadFile(self, file_uuid):
         cursor = self.con.cursor();
         cursor.execute("SELECT FILEOID FROM filebackend WHERE FILEUUID = %s", (str(file_uuid),));
         file_oid = cursor.fetchone()[0]
-        return self.con.lobject(file_oid, 'b');
+        result = self.con.lobject(file_oid, 'b');
+        cursor.close();
+        return result
 
     def backendDeleteFile(self, file_uuid):
         #delete the actual file
@@ -129,3 +141,4 @@ class filemanagement:
         #delete the reference to the file
         cursor.execute("DELETE FROM filebackend WHERE FILEUUID = %s", (str(file_uuid), ));
         self.con.commit()
+        cursor.close();
