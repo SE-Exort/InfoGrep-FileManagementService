@@ -24,9 +24,10 @@ class Postgres(Backend):
 
     def get_file(self, file_uuid: str, file_name: str):
         file = self.param.backendReadFile(file_uuid);
+        contenttype = filetype.guess_mime(file);
         headers = {
             'Content-Disposition': 'attachment; filename='+file_name,
-            'Content-Type': filetype.guess_mime(file)
+            'Content-Type': contenttype if contenttype else "text/plain"
         }
         file.seek(0);
         returnval = Response(file.read(), headers=headers);
