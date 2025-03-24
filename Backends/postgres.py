@@ -26,7 +26,7 @@ class Postgres(Backend):
         file = self.param.backendReadFile(file_uuid);
         headers = {
             'Content-Disposition': 'attachment; filename='+file_name,
-            'Content-Type': filetype.guess_mime(file.read(261))
+            'Content-Type': filetype.guess_mime(file.read())
         }
         file.seek(0);
         returnval = Response(file.read(), headers=headers);
