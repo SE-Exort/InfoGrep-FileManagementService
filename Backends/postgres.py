@@ -6,7 +6,7 @@ from Backends.backend import Backend
 from fastapi import UploadFile
 from fastapi.responses import Response
 import filemanagement
-
+import filetype
 
 class Postgres(Backend):
     def __init__(self, param):
@@ -26,8 +26,9 @@ class Postgres(Backend):
         file = self.param.backendReadFile(file_uuid);
         headers = {
             'Content-Disposition': 'attachment; filename='+file_name,
-            'Content-Type': 'application/pdf'
+            'Content-Type': filetype.guess_mime(file.read(261))
         }
+        file.seek(0);
         returnval = Response(file.read(), headers=headers);
         file.close();
         return returnval
