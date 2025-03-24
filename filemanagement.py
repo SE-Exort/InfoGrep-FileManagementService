@@ -57,13 +57,19 @@ class filemanagement:
         self.con.autocommit = False;
 
     def getConnection(self):
-        try:
+
+        def try_cursor():
             cursor = self.con.cursor()
+            cursor.execute('SELECT 1')
             cursor.close()
+        
+        try:
+            try_cursor()
             return self.con
         except Exception:
             self.logger.warning("Pyscopg2 connection closed, re-establishing ...")
             self.initDbConnection()
+            try_cursor()
             return self.con
         
     def getFilesFromChatroom(self, chatroom_uuid):
